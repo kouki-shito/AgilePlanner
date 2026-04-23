@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  BacklogView.swift
 //  AgilePlanner
 //
 //  Created by 市東 on 2026/04/22.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct BacklogView: View {
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -20,5 +20,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    BacklogView()
 }
