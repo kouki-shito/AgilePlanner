@@ -11,7 +11,7 @@ import SwiftUI
 struct AgilePlannerApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ParentTabView()
         }
     }
 }
