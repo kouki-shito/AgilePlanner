@@ -6,28 +6,26 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
+import SQLiteData
 
 struct BacklogView: View {
     
-    var dummy = [
-        Backlog(id: UUID(), endDate: nil, title: "英語の課題をやる", isDone: false),
-        Backlog(id: UUID(), endDate: nil, title: "英語の課題をやる", isDone: false),
-        Backlog(id: UUID(), endDate: nil, title: "英語の課題をやる", isDone: false)
-    ]
+    @Bindable var store: StoreOf<BacklogReducer>
     
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 List {
-                    ForEach(dummy,id: \.id) { task in
+                    ForEach(store.backlogs.enumerated(), id: \.element) { index, task in
                         HStack() {
                             VStack {
                                 Button {
-                                    // TODO change isDone Toggle
+                                    store.send(.isDoneButtonTapped(index))
                                 } label: {
-                                    Image(systemName: task.isDone ? "checkmark.circle" : "circle")
+                                    Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
                                         .resizable()
-                                        .frame(width: 32, height: 32)
+                                        .frame(width: 24, height: 24)
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -37,22 +35,18 @@ struct BacklogView: View {
                                     .font(.system(size: 16))
                                     .lineLimit(2)
                                     .fontWeight(.regular)
-                                Text("2026年12月28日")
+                                Text(task.deadline?.dateToString(style: task.isIncluedeDeadlineTime ? .full : .noTime) ?? "")
                                     .font(.system(size: 12))
                                     .lineLimit(1)
-                                    .foregroundStyle(.gray)
+                                    .foregroundStyle(task.deadline?.isPast(includeTime: task.isIncluedeDeadlineTime) ?? false ? .red : .gray)
                                     .fontWeight(.regular)
                                 Spacer()
                             }
                             .padding(.leading, 8)
-                            .padding(.top, 4)
                         }
                     }
                     .onDelete(perform: { index in
-                        // TODO Delete Array
-                    })
-                    .onMove(perform: { fromIndex, toIndex in
-                        // TODO Move Array
+                        store.send(.listDeleteAction(index))
                     })
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -60,11 +54,12 @@ struct BacklogView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical,8)
                 }
+                .padding(.top, 8)
                 .listStyle(.plain)
                 .buttonStyle(.plain)
                 .environment(\.defaultMinListRowHeight, .leastNonzeroMagnitude)
                 Button {
-                    // TODO Toggle Submit View
+                    store.send(.addTaskButtonTapped)
                 } label: {
                     ZStack(alignment: .center) {
                         Circle()
@@ -80,13 +75,25 @@ struct BacklogView: View {
                 .padding(.trailing, 24)
                 .padding(.bottom, 8)
             }
+            .sheet(item: $store.scope(state: \.addTaskSheetState, action: \.addTaskSheetAction), content: { store in
+                BacklogAddSheetView(store: store)
+                    .presentationDetents([.height(8*25)])
+                    .presentationBackground(.white)
+            })
             .navigationTitle("バックログ")
         }
     }
 }
 
 #Preview {
+    let _ = prepareDependencies {
+        let db = try! appDatabase()
+        $0.defaultDatabase = db
+    }
     NavigationStack {
-        BacklogView()
+        BacklogView(
+            store: Store(initialState: BacklogReducer.State(), reducer: {
+            BacklogReducer()
+        }))
     }
 }
