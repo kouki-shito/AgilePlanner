@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 struct ParentTabView: View {
     var body: some View {
         TabView {
             Tab("タスク", systemImage: "tray.fill") {
-                BacklogView()
+                BacklogView(
+                    store: Store(initialState: BacklogReducer.State(), reducer: {
+                    BacklogReducer()
+                }))
             }
         }
     }
